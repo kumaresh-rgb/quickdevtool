@@ -24,7 +24,8 @@ export const metadata: Metadata = {
 
 // Set the theme before paint to avoid a flash of the wrong theme. This mutates
 // <html>, so the element carries suppressHydrationWarning to stay deterministic.
-const themeScript = `(function(){try{var t=localStorage.getItem('qdn-theme');if(t==='light')document.documentElement.classList.add('light');}catch(e){}})();`;
+// Default: light mode. Only go dark if user explicitly chose dark.
+const themeScript = `(function(){try{var t=localStorage.getItem('qdn-theme');if(t!=='dark')document.documentElement.classList.add('light');}catch(e){document.documentElement.classList.add('light');}})();`;
 
 export default function RootLayout({
   children,

@@ -184,12 +184,12 @@ export default function DaxInsightPage() {
       </div>
 
       {/* Desktop: 3-panel; mobile: active tab only */}
-      <div className="hidden min-h-0 flex-1 lg:grid lg:grid-cols-[1fr_1fr_360px] lg:divide-x lg:divide-border">
+      <div className="hidden min-h-0 flex-1 overflow-hidden lg:grid lg:grid-cols-[1fr_1fr_360px] lg:divide-x lg:divide-border">
         {Editor}
         {Flow}
         {Insights}
       </div>
-      <div className="min-h-0 flex-1 lg:hidden">
+      <div className="min-h-0 flex-1 overflow-hidden lg:hidden">
         {tab === "editor" ? Editor : tab === "flow" ? Flow : Insights}
       </div>
     </div>

@@ -3,32 +3,31 @@
 import { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
 
-/** Toggles the `light` class on <html>; defaults to dark (developer-first). */
 export function ThemeToggle() {
-  const [light, setLight] = useState(false);
+  const [dark, setDark] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem("qdn-theme");
-    const isLight = stored === "light";
-    setLight(isLight);
-    document.documentElement.classList.toggle("light", isLight);
+    const isDark = stored === "dark";
+    setDark(isDark);
+    document.documentElement.classList.toggle("light", !isDark);
   }, []);
 
   function toggle() {
-    const next = !light;
-    setLight(next);
-    document.documentElement.classList.toggle("light", next);
-    localStorage.setItem("qdn-theme", next ? "light" : "dark");
+    const next = !dark;
+    setDark(next);
+    document.documentElement.classList.toggle("light", !next);
+    localStorage.setItem("qdn-theme", next ? "dark" : "light");
   }
 
   return (
     <button
       onClick={toggle}
       className="btn btn-ghost p-2"
-      aria-label="Toggle theme"
-      title="Toggle theme"
+      aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
+      title={dark ? "Light mode" : "Dark mode"}
     >
-      {light ? <Moon size={16} /> : <Sun size={16} />}
+      {dark ? <Sun size={16} /> : <Moon size={16} />}
     </button>
   );
 }
