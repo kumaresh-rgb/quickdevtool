@@ -4,10 +4,10 @@ import { useEffect } from "react";
 import { motion, useMotionValue, useSpring, useTransform, type MotionValue } from "framer-motion";
 
 const SNIPPETS = [
-  { lang: "dax", top: "12%", left: "6%", delay: 0, depth: 10, code: `EVALUATE\nTOPN(10, Sales, [Total])` },
-  { lang: "json", top: "20%", left: "78%", delay: 1.2, depth: 14, code: `{\n  "id": 42,\n  "ok": true\n}` },
-  { lang: "csharp", top: "64%", left: "9%", delay: 0.6, depth: 12, code: `var x = await db\n  .Notes.ToListAsync();` },
-  { lang: "sql", top: "68%", left: "76%", delay: 1.8, depth: 9, code: `SELECT *\nFROM dbo.Notes` },
+  { lang: "dax",    top: "6%",  left: "0%",  delay: 0,   depth: 10, code: `EVALUATE\nTOPN(10, Sales, [Total])` },
+  { lang: "json",   top: "8%",  left: "80%", delay: 1.2, depth: 14, code: `{\n  "id": 42,\n  "ok": true\n}` },
+  { lang: "csharp", top: "65%", left: "0%",  delay: 0.6, depth: 12, code: `var x = await db\n  .Notes.ToListAsync();` },
+  { lang: "sql",    top: "68%", left: "80%", delay: 1.8, depth: 9,  code: `SELECT *\nFROM dbo.Notes` },
 ];
 
 const COLORS: Record<string, string> = {
@@ -73,7 +73,7 @@ export function FloatingSnippets() {
   }, [mx, my]);
 
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 hidden lg:block">
+    <div aria-hidden className="pointer-events-none absolute inset-0 z-0 hidden lg:block">
       {SNIPPETS.map((s, i) => (
         <Snippet key={i} s={s} mx={mx} my={my} />
       ))}
