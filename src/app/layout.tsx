@@ -17,8 +17,8 @@ export const metadata: Metadata = {
   description:
     "Quick Notes, DAX Insight, DAX Studio, Mermaid Studio, JSON tools and a Kanban board in one ultra-fast workspace for Power BI, Fabric and .NET developers.",
   icons: {
-    icon: "/quick_notes_raw-removebg-preview.png",
-    apple: "/quick_notes_raw-removebg-preview.png",
+    icon: "/logo-icon.png",
+    apple: "/logo-icon.png",
   },
 };
 

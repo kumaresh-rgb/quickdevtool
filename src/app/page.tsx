@@ -73,12 +73,12 @@ export default function Landing() {
 
       {/* Nav */}
       <header className="relative z-20 mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
-        <div className="flex items-center gap-2 font-semibold">
+        <div className="flex items-center gap-3 text-xl font-bold">
           <Image
-            src="/quick_notes_raw-removebg-preview.png"
+            src="/logo-icon.png"
             alt="Quick Notes"
-            width={48}
-            height={48}
+            width={36}
+            height={36}
             priority
           />
           Quick Notes
