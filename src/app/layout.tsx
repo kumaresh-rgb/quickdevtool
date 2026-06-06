@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Quick Notes — the developer & BI workspace",
+  title: "Quick Dev Tools — the developer & BI workspace",
   description:
-    "Quick Notes, DAX Insight, DAX Studio, Mermaid Studio, JSON tools and a Kanban board in one ultra-fast workspace for Power BI, Fabric and .NET developers.",
+    "Quick Dev Tools: Notes, DAX Insight, DAX Studio, Mermaid Studio, JSON Toolkit, Text Compare and Kanban — all in one ultra-fast local-first workspace for developers.",
   icons: {
     icon: "/logo-icon.png",
     apple: "/logo-icon.png",
