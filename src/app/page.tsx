@@ -304,19 +304,16 @@ export default function Landing() {
       <CursorGlow />
 
       {/* ── Nav ────────────────────────────────────────────── */}
-      <header className="relative z-20 mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
-        <div className="flex items-center gap-3 text-xl font-bold">
-          <Image src="/logo-icon.png" alt="Quick Dev Tools" width={36} height={36} priority />
-          Quick Dev Tools
+      <header className="relative z-20 mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 sm:py-5">
+        <div className="flex items-center gap-2.5 text-lg font-bold sm:text-xl">
+          <Image src="/logo-icon.png" alt="Quick Dev Tools" width={32} height={32} priority />
+          <span className="hidden xs:block sm:block">Quick Dev Tools</span>
         </div>
         <nav className="flex items-center gap-2">
           <ThemeToggle />
-          <Link href="/app/notes" className="btn btn-ghost px-4 py-2 text-sm hidden sm:inline-flex">
+          <Link href="/app/notes" className="btn btn-accent px-4 py-2 text-sm">
             Open app
           </Link>
-          <MagneticButton href="/app/notes">
-            Get started <ArrowRight size={14} />
-          </MagneticButton>
         </nav>
       </header>
 
@@ -347,15 +344,12 @@ export default function Landing() {
             diff tools. Quick Dev Tools is your single ultra-fast local-first workspace.
           </p>
 
-          <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
+          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <MagneticButton href="/app/notes">
-              Start for free <ArrowRight size={16} />
+              Open the workspace <ArrowRight size={16} />
             </MagneticButton>
             <MagneticButton href="/app/insight" variant="ghost">
-              DAX Insight
-            </MagneticButton>
-            <MagneticButton href="/app/mermaid" variant="ghost">
-              Mermaid Studio
+              Try DAX Insight
             </MagneticButton>
           </div>
         </motion.div>
@@ -393,7 +387,7 @@ export default function Landing() {
 
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={tools} strategy={rectSortingStrategy}>
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {orderedTools.map((tool) => (
                 <SortableTool key={tool.id} tool={tool} />
               ))}
@@ -413,13 +407,13 @@ export default function Landing() {
           <p className="mt-3 text-fg-muted">Click a tool to see what it does</p>
         </motion.div>
 
-        {/* Tab strip */}
-        <div className="mb-8 flex flex-wrap justify-center gap-2">
+        {/* Tab strip — horizontally scrollable on mobile */}
+        <div className="mb-8 -mx-4 flex gap-2 overflow-x-auto px-4 pb-2 sm:mx-0 sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-0 sm:pb-0">
           {TOOLS.map((t) => (
             <button
               key={t.id}
               onClick={() => setActiveTab(t.id)}
-              className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-all ${
+              className={`flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-all ${
                 activeTab === t.id
                   ? "border-transparent text-white shadow-lg"
                   : "border-border bg-bg-card text-fg-muted hover:border-border-soft hover:text-fg"
