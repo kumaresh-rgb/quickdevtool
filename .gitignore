@@ -48,6 +48,10 @@ next-env.d.ts
 AGENTS.md
 CLAUDE.md
 
-# raw source assets (processed versions are committed to public/)
+# raw source assets (large source files, processed versions committed)
 src/app/Quick\ Notes\ Logo.png
 "src/app/Quick Notes Logo.png"
+public/Quick\ Notes\ Logo.png
+"public/Quick Notes Logo.png"
+public/quick\ notes\ raw.png
+"public/quick notes raw.png"

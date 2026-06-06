@@ -16,6 +16,10 @@ export const metadata: Metadata = {
   title: "Quick Notes — the developer & BI workspace",
   description:
     "Quick Notes, DAX Insight, DAX Studio, Mermaid Studio, JSON tools and a Kanban board in one ultra-fast workspace for Power BI, Fabric and .NET developers.",
+  icons: {
+    icon: "/quick_notes_raw-removebg-preview.png",
+    apple: "/quick_notes_raw-removebg-preview.png",
+  },
 };
 
 // Set the theme before paint to avoid a flash of the wrong theme. This mutates

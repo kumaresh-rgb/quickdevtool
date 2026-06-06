@@ -75,11 +75,10 @@ export default function Landing() {
       <header className="relative z-20 mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
         <div className="flex items-center gap-2 font-semibold">
           <Image
-            src="/logo.png"
+            src="/quick_notes_raw-removebg-preview.png"
             alt="Quick Notes"
-            width={32}
-            height={32}
-            className="rounded-lg"
+            width={48}
+            height={48}
             priority
           />
           Quick Notes

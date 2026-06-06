@@ -39,7 +39,7 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
 function Brand() {
   return (
     <Link href="/" className="flex items-center gap-2 px-1 font-semibold">
-      <Image src="/logo.png" alt="Quick Notes" width={30} height={30} className="rounded-lg" />
+      <Image src="/quick_notes_raw-removebg-preview.png" alt="Quick Notes" width={44} height={44} />
       <span>Quick Notes</span>
     </Link>
   );
