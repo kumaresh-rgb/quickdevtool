@@ -2,49 +2,62 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import {
-  Plus, Search, Pin, Trash2, PanelLeftClose, PanelLeft, Loader2, Check, FileText,
+  Plus, Search, Pin, Trash2, PanelLeftClose, PanelLeft, Check, FileText,
 } from "lucide-react";
-import { api, type Note } from "@/lib/api";
+import type { Note } from "@/lib/api";
 import { RichEditor } from "@/components/notes/RichEditor";
-import { log } from "@/lib/logger";
 import { cn } from "@/lib/cn";
+
+/* ─── localStorage helpers ───────────────────────────────── */
+
+const STORE_KEY = "qdt-notes-v2";
+
+function loadNotes(): Note[] {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY) || "[]"); }
+  catch { return []; }
+}
+
+function saveNotes(notes: Note[]) {
+  localStorage.setItem(STORE_KEY, JSON.stringify(notes));
+}
+
+function mkNote(title = "Untitled"): Note {
+  const now = new Date().toISOString();
+  return {
+    id: `note-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    title, content: "", tags: "", isPinned: false,
+    isArchived: false, folder: null, createdAt: now, updatedAt: now,
+  };
+}
 
 function plainPreview(html: string): string {
   return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }
 
+/* ─── Page ───────────────────────────────────────────────── */
+
 export default function QuickNotesPage() {
-  const [notes, setNotes] = useState<Note[]>([]);
+  const [notes, setNotes]       = useState<Note[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [query, setQuery] = useState("");
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [query, setQuery]       = useState("");
+  const [title, setTitle]       = useState("");
+  const [content, setContent]   = useState("");
+  const [status, setStatus]     = useState<"idle" | "saving" | "saved">("idle");
   const [listOpen, setListOpen] = useState(true);
-  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [mounted, setMounted]   = useState(false);
+  const saveTimer               = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /* Load from localStorage on mount */
+  useEffect(() => {
+    const stored = loadNotes();
+    setNotes(stored);
+    setActiveId(stored[0]?.id ?? null);
+    setMounted(true);
+  }, []);
 
   const active = notes.find((n) => n.id === activeId) ?? null;
 
-  const load = useCallback(async () => {
-    try {
-      const data = await api.get<Note[]>(`/api/notes${query ? `?q=${encodeURIComponent(query)}` : ""}`);
-      setNotes(data);
-      setError(null);
-      setActiveId((cur) => cur ?? data[0]?.id ?? null);
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setLoading(false);
-    }
-  }, [query]);
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  // Sync editor fields when the active note changes.
+  /* Sync editor when active note changes */
   useEffect(() => {
     if (active) {
       setTitle(active.title);
@@ -53,61 +66,76 @@ export default function QuickNotesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeId]);
 
+  /* Filtered list */
+  const filtered = query
+    ? notes.filter((n) =>
+        n.title.toLowerCase().includes(query.toLowerCase()) ||
+        plainPreview(n.content).toLowerCase().includes(query.toLowerCase())
+      )
+    : notes;
+
+  const sorted = [...filtered].sort((a, b) => {
+    if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
+    return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+  });
+
+  /* Persist changes */
   const persist = useCallback(
-    async (nextTitle: string, nextContent: string) => {
+    (nextTitle: string, nextContent: string) => {
       if (!active) return;
-      setStatus("saving");
-      try {
-        const updated = await api.put<Note>(`/api/notes/${active.id}`, {
-          title: nextTitle,
-          content: nextContent,
-          tags: active.tags,
-          isPinned: active.isPinned,
-          isArchived: active.isArchived,
-          folder: active.folder,
-        });
-        setNotes((prev) => prev.map((n) => (n.id === updated.id ? updated : n)));
-        setStatus("saved");
-      } catch {
-        setStatus("idle");
-      }
+      const now = new Date().toISOString();
+      const updated: Note = { ...active, title: nextTitle, content: nextContent, updatedAt: now };
+      setNotes((prev) => {
+        const next = prev.map((n) => (n.id === active.id ? updated : n));
+        saveNotes(next);
+        return next;
+      });
+      setStatus("saved");
     },
-    [active]
+    [active],
   );
 
-  // Autosave 2s after the last edit — no save button.
   function scheduleSave(nextTitle: string, nextContent: string) {
     setStatus("saving");
     if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => persist(nextTitle, nextContent), 2000);
+    saveTimer.current = setTimeout(() => persist(nextTitle, nextContent), 1000);
   }
 
-  async function createNote() {
-    const created = await api.post<Note>("/api/notes", {
-      title: "Untitled", content: "", tags: "", isPinned: false, isArchived: false, folder: null,
+  function createNote() {
+    const note = mkNote();
+    setNotes((prev) => {
+      const next = [note, ...prev];
+      saveNotes(next);
+      return next;
     });
-    setNotes((prev) => [created, ...prev]);
-    setActiveId(created.id);
-    log.action("QuickNotes", "create-note");
+    setActiveId(note.id);
   }
 
-  async function togglePin(e: React.MouseEvent, n: Note) {
+  function togglePin(e: React.MouseEvent, n: Note) {
     e.stopPropagation();
-    const updated = await api.put<Note>(`/api/notes/${n.id}`, { ...n, isPinned: !n.isPinned });
-    setNotes((prev) => prev.map((x) => (x.id === updated.id ? updated : x)));
-    load();
+    setNotes((prev) => {
+      const next = prev.map((x) => x.id === n.id ? { ...x, isPinned: !x.isPinned } : x);
+      saveNotes(next);
+      return next;
+    });
   }
 
-  async function remove(e: React.MouseEvent, id: string) {
+  function remove(e: React.MouseEvent, id: string) {
     e.stopPropagation();
-    await api.del(`/api/notes/${id}`);
-    setNotes((prev) => prev.filter((n) => n.id !== id));
-    if (activeId === id) setActiveId(null);
+    setNotes((prev) => {
+      const next = prev.filter((n) => n.id !== id);
+      saveNotes(next);
+      if (activeId === id) setActiveId(next[0]?.id ?? null);
+      return next;
+    });
   }
+
+  if (!mounted) return null;
 
   return (
     <div className="flex h-full">
-      {/* Notes list panel */}
+
+      {/* ── Notes list ───────────────────────────────────── */}
       {listOpen && (
         <div className="flex w-72 shrink-0 flex-col border-r border-border bg-bg-elevated">
           <div className="flex items-center gap-2 border-b border-border p-3">
@@ -126,22 +154,16 @@ export default function QuickNotesPage() {
           </div>
 
           <div className="flex-1 overflow-auto">
-            {loading && (
-              <div className="flex items-center gap-2 p-4 text-xs text-fg-subtle">
-                <Loader2 size={14} className="animate-spin" /> Loading…
-              </div>
-            )}
-            {error && <div className="p-4 text-xs text-danger">Backend offline: {error}</div>}
-            {!loading && notes.length === 0 && !error && (
+            {sorted.length === 0 && (
               <p className="p-4 text-xs text-fg-subtle">No notes yet. Create one →</p>
             )}
-            {notes.map((n) => (
+            {sorted.map((n) => (
               <div
                 key={n.id}
                 onClick={() => setActiveId(n.id)}
                 className={cn(
                   "group flex w-full cursor-pointer items-start gap-2 border-b border-border-soft px-3 py-2.5 transition-colors",
-                  activeId === n.id ? "bg-accent-soft" : "hover:bg-bg-card"
+                  activeId === n.id ? "bg-accent-soft" : "hover:bg-bg-card",
                 )}
               >
                 <div className="min-w-0 flex-1">
@@ -153,10 +175,16 @@ export default function QuickNotesPage() {
                     {plainPreview(n.content).slice(0, 60) || "Empty note"}
                   </p>
                 </div>
-                <button onClick={(e) => togglePin(e, n)} title="Pin" className="mt-0.5 shrink-0 text-fg-subtle opacity-0 transition hover:text-accent group-hover:opacity-100">
+                <button
+                  onClick={(e) => togglePin(e, n)}
+                  title={n.isPinned ? "Unpin" : "Pin"}
+                  className="mt-0.5 shrink-0 text-fg-subtle opacity-0 transition hover:text-accent group-hover:opacity-100">
                   <Pin size={13} />
                 </button>
-                <button onClick={(e) => remove(e, n.id)} title="Delete" className="mt-0.5 shrink-0 text-fg-subtle opacity-0 transition hover:text-danger group-hover:opacity-100">
+                <button
+                  onClick={(e) => remove(e, n.id)}
+                  title="Delete"
+                  className="mt-0.5 shrink-0 text-fg-subtle opacity-0 transition hover:text-danger group-hover:opacity-100">
                   <Trash2 size={13} />
                 </button>
               </div>
@@ -165,12 +193,15 @@ export default function QuickNotesPage() {
         </div>
       )}
 
-      {/* Editor */}
+      {/* ── Editor ───────────────────────────────────────── */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {active ? (
           <>
             <div className="flex items-center gap-2 border-b border-border px-3 py-2">
-              <button onClick={() => setListOpen(!listOpen)} className="btn btn-ghost p-1.5" title="Toggle list">
+              <button
+                onClick={() => setListOpen(!listOpen)}
+                className="btn btn-ghost p-1.5"
+                title="Toggle list">
                 {listOpen ? <PanelLeftClose size={16} /> : <PanelLeft size={16} />}
               </button>
               <input
@@ -196,16 +227,15 @@ export default function QuickNotesPage() {
               />
             </div>
 
-            {/* Status bar */}
             <div className="flex items-center justify-between border-t border-border px-4 py-1.5 text-xs text-fg-subtle">
               <span className="flex items-center gap-1.5">
                 <FileText size={12} /> {plainPreview(content).length} chars
               </span>
               <span className="flex items-center gap-1.5">
                 {status === "saving" ? (
-                  <><Loader2 size={12} className="animate-spin" /> Saving…</>
+                  <span className="text-fg-subtle">Saving…</span>
                 ) : status === "saved" ? (
-                  <><Check size={12} className="text-success" /> Autosaved</>
+                  <><Check size={12} className="text-success" /> Saved</>
                 ) : (
                   "Autosave on"
                 )}
@@ -214,12 +244,10 @@ export default function QuickNotesPage() {
           </>
         ) : (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 text-sm text-fg-subtle">
-            {error ? "Start the backend, then refresh." : "Select or create a note to begin."}
-            {!error && (
-              <button onClick={createNote} className="btn btn-accent px-4 py-2 text-sm">
-                <Plus size={15} /> New note
-              </button>
-            )}
+            <p>Select or create a note to begin.</p>
+            <button onClick={createNote} className="btn btn-accent px-4 py-2 text-sm">
+              <Plus size={15} /> New note
+            </button>
           </div>
         )}
       </div>

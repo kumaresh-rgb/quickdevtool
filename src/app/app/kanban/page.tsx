@@ -7,9 +7,9 @@ import {
 } from "@dnd-kit/core";
 import {
   Plus, Loader2, X, Calendar, Tag, User, Clock,
-  AlertCircle, BarChart2, Flag, ChevronDown,
+  AlertCircle, BarChart2, Flag,
 } from "lucide-react";
-import { api, type KanbanCard } from "@/lib/api";
+import type { KanbanCard } from "@/lib/api";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { cn } from "@/lib/cn";
 
@@ -47,12 +47,48 @@ interface TaskMeta {
   notes: string;
 }
 
-const metaStore: Record<string, TaskMeta> = {};
+/* ─── localStorage helpers ───────────────────────────────── */
+
+const CARDS_KEY = "qdt-kanban-cards";
+const META_KEY  = "qdt-kanban-meta";
+
+function loadCards(): KanbanCard[] {
+  try { return JSON.parse(localStorage.getItem(CARDS_KEY) || "[]"); }
+  catch { return []; }
+}
+function saveCards(cards: KanbanCard[]) {
+  localStorage.setItem(CARDS_KEY, JSON.stringify(cards));
+}
+
+let metaStore: Record<string, TaskMeta> = {};
+function loadMeta(): Record<string, TaskMeta> {
+  try { return JSON.parse(localStorage.getItem(META_KEY) || "{}"); }
+  catch { return {}; }
+}
+function saveMeta(store: Record<string, TaskMeta>) {
+  localStorage.setItem(META_KEY, JSON.stringify(store));
+}
 
 function getMeta(id: string): TaskMeta {
   return metaStore[id] ?? {
     taskType: "Feature", estimatedHours: "", actualHours: "",
     assignee: "", referenceLinks: "", notes: "",
+  };
+}
+
+function mkCard(data: Partial<KanbanCard>): KanbanCard {
+  const now = new Date().toISOString();
+  return {
+    id: `card-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`,
+    title: data.title ?? "Untitled",
+    description: data.description ?? "",
+    column: data.column ?? "Backlog",
+    order: data.order ?? Date.now(),
+    priority: data.priority ?? "Medium",
+    labels: data.labels ?? "",
+    dueDate: data.dueDate ?? null,
+    createdAt: now,
+    updatedAt: now,
   };
 }
 
@@ -534,67 +570,71 @@ function InsightsPanel({ cards, onClose }: { cards: KanbanCard[]; onClose: () =>
 
 /* ─── Page ───────────────────────────────────────────────── */
 export default function KanbanPage() {
-  const [cards, setCards] = useState<KanbanCard[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [modal, setModal] = useState<{ column: string; card?: KanbanCard } | null>(null);
+  const [cards, setCards]           = useState<KanbanCard[]>([]);
+  const [activeId, setActiveId]     = useState<string | null>(null);
+  const [modal, setModal]           = useState<{ column: string; card?: KanbanCard } | null>(null);
   const [showInsights, setShowInsights] = useState(false);
+  const [mounted, setMounted]       = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
 
+  /* Load from localStorage on mount */
   useEffect(() => {
-    api.get<KanbanCard[]>("/api/kanban")
-      .then(setCards)
-      .catch((e) => setError((e as Error).message))
-      .finally(() => setLoading(false));
+    const stored = loadCards();
+    setCards(stored);
+    metaStore = loadMeta();
+    setMounted(true);
   }, []);
 
-  async function handleSave(data: Partial<KanbanCard>, localMeta: TaskMeta) {
+  function updateCards(next: KanbanCard[]) {
+    setCards(next);
+    saveCards(next);
+  }
+
+  function handleSave(data: Partial<KanbanCard>, localMeta: TaskMeta) {
     const isEdit = !!modal?.card;
     if (isEdit && modal?.card) {
-      const updated = await api.patch<KanbanCard>(`/api/kanban/${modal.card.id}`, {
-        ...modal.card, ...data,
-      });
+      const now = new Date().toISOString();
+      const updated: KanbanCard = { ...modal.card, ...data, updatedAt: now };
       metaStore[updated.id] = localMeta;
-      setCards((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+      saveMeta(metaStore);
+      updateCards(cards.map((c) => (c.id === updated.id ? updated : c)));
     } else {
-      const created = await api.post<KanbanCard>("/api/kanban", {
-        title: data.title ?? "Untitled",
-        description: data.description ?? "",
+      const created = mkCard({
+        ...data,
         column: data.column ?? modal?.column ?? "Backlog",
         order: Date.now(),
-        priority: data.priority ?? "Medium",
-        labels: data.labels ?? "",
-        dueDate: data.dueDate ?? null,
       });
       metaStore[created.id] = localMeta;
-      setCards((prev) => [...prev, created]);
+      saveMeta(metaStore);
+      updateCards([...cards, created]);
     }
     setModal(null);
   }
 
-  async function deleteCard(id: string) {
-    setCards((prev) => prev.filter((c) => c.id !== id));
-    await api.del(`/api/kanban/${id}`);
+  function deleteCard(id: string) {
+    updateCards(cards.filter((c) => c.id !== id));
   }
 
   function onDragStart(e: DragStartEvent) { setActiveId(String(e.active.id)); }
 
-  async function onDragEnd(e: DragEndEvent) {
+  function onDragEnd(e: DragEndEvent) {
     setActiveId(null);
     const { active, over } = e;
     if (!over) return;
     const card = cards.find((c) => c.id === active.id);
     const targetCol = String(over.id);
     if (!card || card.column === targetCol) return;
-    setCards((prev) => prev.map((c) => (c.id === card.id ? { ...c, column: targetCol } : c)));
-    await api.patch(`/api/kanban/${card.id}/move`, { column: targetCol, order: Date.now() });
+    updateCards(cards.map((c) =>
+      c.id === card.id ? { ...c, column: targetCol, order: Date.now() } : c
+    ));
   }
 
   const activeCard = cards.find((c) => c.id === activeId) ?? null;
+
+  if (!mounted) return null;
 
   return (
     <div className="flex h-full flex-col">
@@ -610,37 +650,25 @@ export default function KanbanPage() {
         }
       />
 
-      {loading ? (
-        <div className="flex flex-1 items-center justify-center gap-2 text-sm text-fg-subtle">
-          <Loader2 size={16} className="animate-spin" /> Loading board…
+      <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
+        <div className="flex flex-1 gap-4 overflow-x-auto p-4">
+          {COLUMNS.map((col) => (
+            <Column
+              key={col.id}
+              id={col.id}
+              label={col.label}
+              color={col.color}
+              cards={cards.filter((c) => c.column === col.id).sort((a, b) => a.order - b.order)}
+              onAdd={(colId) => setModal({ column: colId })}
+              onDelete={deleteCard}
+              onEdit={(card) => setModal({ column: card.column, card })}
+            />
+          ))}
         </div>
-      ) : error ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 text-sm">
-          <AlertCircle size={32} className="text-danger/50" />
-          <p className="text-fg-muted">Backend offline — {error}</p>
-          <p className="text-xs text-fg-subtle">Start the .NET backend to enable persistence</p>
-        </div>
-      ) : (
-        <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
-          <div className="flex flex-1 gap-4 overflow-x-auto p-4">
-            {COLUMNS.map((col) => (
-              <Column
-                key={col.id}
-                id={col.id}
-                label={col.label}
-                color={col.color}
-                cards={cards.filter((c) => c.column === col.id).sort((a, b) => a.order - b.order)}
-                onAdd={(colId) => setModal({ column: colId })}
-                onDelete={deleteCard}
-                onEdit={(card) => setModal({ column: card.column, card })}
-              />
-            ))}
-          </div>
-          <DragOverlay>
-            {activeCard ? <CardView card={activeCard} overlay /> : null}
-          </DragOverlay>
-        </DndContext>
-      )}
+        <DragOverlay>
+          {activeCard ? <CardView card={activeCard} overlay /> : null}
+        </DragOverlay>
+      </DndContext>
 
       {modal && (
         <TaskModal

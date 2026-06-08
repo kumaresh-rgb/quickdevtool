@@ -103,10 +103,10 @@ function BackgroundCanvas() {
             {DEMO_NODES.map((n) => (
               <g key={n.id}>
                 <rect x={n.x} y={n.y} width={n.w} height={n.h} rx="8"
-                  fill={`${n.color}15`} stroke={n.color} strokeWidth="1.5" opacity="0.5" />
+                  fill={`${n.color}22`} stroke={n.color} strokeWidth="1.5" opacity="0.75" />
                 <text x={n.x + n.w / 2} y={n.y + n.h / 2 + 4}
                   textAnchor="middle" fontSize="11" fontWeight="500"
-                  fill={n.color} opacity="0.6">{n.label}</text>
+                  fill={n.color} opacity="0.85">{n.label}</text>
               </g>
             ))}
           </svg>
@@ -135,7 +135,7 @@ export default function WhiteboardPage() {
       <BackgroundCanvas />
 
       {/* Blur + dim overlay */}
-      <div className="absolute inset-0 z-10 backdrop-blur-md" style={{ background: "color-mix(in srgb, var(--color-bg) 55%, transparent)" }} />
+      <div className="absolute inset-0 z-10 bg-bg/40 backdrop-blur-[6px]" />
 
       {/* Coming soon card — centred */}
       <div className="relative z-20 flex h-full w-full items-center justify-center p-6">
