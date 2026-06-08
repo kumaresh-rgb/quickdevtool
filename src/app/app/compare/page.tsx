@@ -5,18 +5,8 @@ import { Columns2, Rows3, ArrowLeftRight } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { diffLines, diffStats, diffWords, type LineDiff, type WordPart } from "@/lib/diff";
 
-const LEFT_SAMPLE = `function total(items) {
-  let sum = 0;
-  for (const i of items) {
-    sum += i.price;
-  }
-  return sum;
-}`;
-
-const RIGHT_SAMPLE = `function total(items) {
-  return items
-    .reduce((sum, i) => sum + i.price, 0);
-}`;
+const LEFT_SAMPLE  = "";
+const RIGHT_SAMPLE = "";
 
 function WordSpans({ parts }: { parts: WordPart[] }) {
   return (
@@ -105,19 +95,25 @@ export default function ComparePage() {
           value={left}
           onChange={(e) => setLeft(e.target.value)}
           spellCheck={false}
-          className="h-32 resize-none bg-bg p-3 font-mono text-xs leading-5 outline-none"
-          placeholder="Original…"
+          className="h-44 resize-none bg-bg p-3 font-mono text-xs leading-5 outline-none"
+          placeholder="Paste original text here…"
         />
         <textarea
           value={right}
           onChange={(e) => setRight(e.target.value)}
           spellCheck={false}
-          className="h-32 resize-none bg-bg p-3 font-mono text-xs leading-5 outline-none"
-          placeholder="Changed…"
+          className="h-44 resize-none bg-bg p-3 font-mono text-xs leading-5 outline-none"
+          placeholder="Paste changed text here…"
         />
       </div>
 
       <div className="flex-1 overflow-auto bg-bg-elevated font-mono text-xs leading-6">
+        {!left && !right && (
+          <div className="flex h-full flex-col items-center justify-center gap-2 text-fg-subtle">
+            <span className="text-2xl">⇄</span>
+            <p className="text-sm">Paste text into both panels above to see the diff</p>
+          </div>
+        )}
         {view === "split" ? (
           <table className="w-full border-collapse">
             <tbody>

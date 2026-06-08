@@ -28,6 +28,8 @@ import {
   GitCompare,
   Database,
   Workflow,
+  FileText,
+  PenLine,
   ArrowRight,
   Sparkles,
   KanbanSquare,
@@ -76,6 +78,26 @@ const notes  = await result.json();
 // Slash-command inline: type /dax →
 CALCULATE(SUM(Sales[Amount]),
   FILTER(ALL(Calendar), ...))`,
+  },
+  {
+    id: "markdown",
+    icon: FileText,
+    label: "MD Studio",
+    color: "#38bdf8",
+    href: "/app/markdown",
+    tagline: "Documentation workspace with live preview",
+    bullets: [
+      "Monaco editor + GitHub-style live preview",
+      "Mermaid diagram rendering built-in",
+      "Pin, search & auto-save to local storage",
+      "Word count, reading time, export to .md",
+    ],
+    preview: `┌─ Explorer ──┐ ┌─ Editor ───┐ ┌─ Preview ──┐
+│ 📌 README   │ │ # My Docs  │ │ My Docs    │
+│  API Guide  │ │            │ │ ─────────  │
+│  Changelog  │ │ ## Setup   │ │ Setup      │
+└─────────────┘ │ ...        │ │ ...        │
+                └────────────┘ └────────────┘`,
   },
   {
     id: "insight",
@@ -198,6 +220,28 @@ CALCULATE(SUM(Sales[Amount]),
 └────────────┘ └──────────────┘ └────────┘
          ↕ drag cards · full task details`,
   },
+  {
+    id: "whiteboard",
+    icon: PenLine,
+    label: "Quick Board",
+    color: "#e879f9",
+    href: "/app/whiteboard",
+    tagline: "AI-powered infinite canvas for visual thinking",
+    bullets: [
+      "Infinite canvas — shapes, connectors, sticky notes",
+      "AI Copilot: generate system designs from a prompt",
+      "Mermaid & flowchart rendering built-in",
+      "Export to PNG · SVG · PDF",
+    ],
+    preview: `┌─ Canvas ────────────────────────────────┐
+│  [API Gateway] ──▶ [Auth Service]       │
+│       │                │                │
+│       ▼                ▼                │
+│  [User DB]      [Session Store]         │
+│                                         │
+│  ✨ AI: "Design Netflix architecture"   │
+└─────────────────────────────────────────┘`,
+  },
 ];
 
 const ROADMAP = [
@@ -237,19 +281,24 @@ const ROADMAP = [
     desc: "Side-by-side and inline modes, word highlighting",
   },
   {
-    status: "active",
-    label: "Notes sidebar drag-to-reorder",
-    desc: "Reorder and move notes between folders",
+    status: "done",
+    label: "MD Studio (documentation workspace)",
+    desc: "Monaco editor + live preview + Mermaid + localStorage",
+  },
+  {
+    status: "done",
+    label: "Quick Board (AI infinite canvas)",
+    desc: "Visual thinking workspace — shapes, connectors, AI Copilot",
   },
   {
     status: "active",
-    label: "Kanban CSV / Excel export",
-    desc: "Export tasks with filters to CSV and Excel",
+    label: "Quick Board AI Copilot",
+    desc: "Generate system designs and diagrams from natural language",
   },
   {
-    status: "planned",
-    label: "Activity history & task timeline",
-    desc: "Full audit trail with timestamps on every change",
+    status: "active",
+    label: "Real-time collaboration (Liveblocks)",
+    desc: "Live cursors, presence, and multi-user canvas editing",
   },
   {
     status: "planned",

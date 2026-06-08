@@ -98,10 +98,17 @@ export default function JsonToolkit() {
   const minify = () => run((o) => JSON.stringify(o));
   const escape = () => setOutput(JSON.stringify(input));
   const unescape = () => {
+    const trimmed = input.trim();
     try {
-      setOutput(JSON.parse(input));
+      // If it's a JSON string literal, unwrap it to get actual content
+      if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
+        const inner = JSON.parse(trimmed);
+        setOutput(typeof inner === "string" ? inner : JSON.stringify(inner, null, 2));
+      } else {
+        setOutput(unescapeJsonDax(trimmed));
+      }
     } catch {
-      setOutput(unescapeJsonDax(input));
+      setOutput(unescapeJsonDax(trimmed));
     }
   };
 
