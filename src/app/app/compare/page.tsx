@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import { Columns2, Rows3, ArrowLeftRight } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { diffLines, diffStats, diffWords, type LineDiff, type WordPart } from "@/lib/diff";
+import { useSplitResize } from "@/lib/useSplitResize";
+import { SplitDivider } from "@/components/SplitDivider";
 
 const LEFT_SAMPLE  = "";
 const RIGHT_SAMPLE = "";
@@ -40,6 +42,7 @@ export default function ComparePage() {
   const [left, setLeft] = useState(LEFT_SAMPLE);
   const [right, setRight] = useState(RIGHT_SAMPLE);
   const [view, setView] = useState<"split" | "inline">("split");
+  const split = useSplitResize("qdt-compare-split");
 
   const diff = useMemo(() => diffLines(left, right), [left, right]);
   const stats = useMemo(() => diffStats(diff), [diff]);
@@ -90,20 +93,23 @@ export default function ComparePage() {
         }
       />
 
-      <div className="grid grid-cols-1 divide-y divide-border border-b border-border sm:grid-cols-2 sm:divide-x sm:divide-y-0">
+      <div ref={split.containerRef} className="flex flex-col divide-y divide-border border-b border-border md:flex-row md:divide-x md:divide-y-0">
         <textarea
           value={left}
           onChange={(e) => setLeft(e.target.value)}
           spellCheck={false}
-          className="h-44 resize-none bg-bg p-3 font-mono text-xs leading-5 outline-none"
+          className="h-44 resize-none bg-bg p-3 font-mono text-xs leading-5 outline-none md:flex-1"
           placeholder="Paste original text here…"
+          style={split.leftStyle}
         />
+        <SplitDivider onMouseDown={split.onDragStart} />
         <textarea
           value={right}
           onChange={(e) => setRight(e.target.value)}
           spellCheck={false}
-          className="h-44 resize-none bg-bg p-3 font-mono text-xs leading-5 outline-none"
+          className="h-44 resize-none bg-bg p-3 font-mono text-xs leading-5 outline-none md:flex-1"
           placeholder="Paste changed text here…"
+          style={split.rightStyle}
         />
       </div>
 

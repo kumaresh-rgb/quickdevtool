@@ -138,6 +138,9 @@ export default function MdStudioPage() {
   const [isDark, setIsDark]     = useState(false);
   const [copied, copy]          = useCopy();
   const saveTimer               = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [splitPct, setSplitPct] = useState(50);
+  const splitRef                = useRef(50);
+  const panelsRef               = useRef<HTMLDivElement>(null);
 
   /* load from localStorage on mount */
   useEffect(() => {
@@ -147,6 +150,8 @@ export default function MdStudioPage() {
       setActiveId(stored[0].id);
     }
     setIsDark(!document.documentElement.classList.contains("light"));
+    const s = Number(localStorage.getItem("qdt-md-split") || "0");
+    if (s >= 15 && s <= 85) { setSplitPct(s); splitRef.current = s; }
   }, []);
 
   /* detect theme changes */
@@ -230,6 +235,28 @@ export default function MdStudioPage() {
     a.href     = URL.createObjectURL(blob);
     a.download = `${activeDoc.title.replace(/[^a-z0-9]/gi, "-")}.md`;
     a.click();
+  }
+
+  function startSplitDrag(e: React.MouseEvent) {
+    e.preventDefault();
+    function move(ev: MouseEvent) {
+      if (!panelsRef.current) return;
+      const { left, width } = panelsRef.current.getBoundingClientRect();
+      const pct = Math.max(15, Math.min(85, ((ev.clientX - left) / width) * 100));
+      setSplitPct(pct);
+      splitRef.current = pct;
+    }
+    function up() {
+      localStorage.setItem("qdt-md-split", String(splitRef.current));
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+      document.removeEventListener("mousemove", move);
+      document.removeEventListener("mouseup", up);
+    }
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    document.addEventListener("mousemove", move);
+    document.addEventListener("mouseup", up);
   }
 
   const filtered = useMemo(() => {
@@ -409,14 +436,14 @@ export default function MdStudioPage() {
         {!activeDoc ? (
           <EmptyState onNew={newDoc} />
         ) : (
-          <div className="flex min-h-0 flex-1 overflow-hidden">
+          <div ref={panelsRef} className="flex min-h-0 flex-1 overflow-hidden">
 
             {/* Editor panel */}
             {(view === "edit" || view === "split") && (
-              <div className={cn(
-                "flex min-w-0 flex-col border-r border-border",
-                view === "split" ? "w-1/2" : "flex-1"
-              )}>
+              <div
+                className={cn("flex min-w-0 flex-col border-r border-border", view !== "split" && "flex-1")}
+                style={view === "split" ? { width: `${splitPct}%` } : undefined}
+              >
                 <div className="flex items-center gap-2 border-b border-border px-3 py-1.5 text-[10px] text-fg-subtle">
                   <FileCode size={11} /> Markdown
                 </div>
@@ -444,12 +471,26 @@ export default function MdStudioPage() {
               </div>
             )}
 
+            {/* Draggable divider */}
+            {view === "split" && (
+              <div
+                className="group relative flex w-1 shrink-0 cursor-col-resize select-none items-center justify-center bg-border transition-colors hover:bg-accent/50 active:bg-accent/70"
+                onMouseDown={startSplitDrag}
+              >
+                <div className="pointer-events-none flex flex-col items-center gap-[3px]">
+                  <span className="h-1 w-1 rounded-full bg-fg-subtle/30 group-hover:bg-accent/80" />
+                  <span className="h-1 w-1 rounded-full bg-fg-subtle/30 group-hover:bg-accent/80" />
+                  <span className="h-1 w-1 rounded-full bg-fg-subtle/30 group-hover:bg-accent/80" />
+                </div>
+              </div>
+            )}
+
             {/* Preview panel */}
             {(view === "preview" || view === "split") && (
-              <div className={cn(
-                "flex min-w-0 flex-col overflow-hidden",
-                view === "split" ? "w-1/2" : "flex-1"
-              )}>
+              <div
+                className={cn("flex min-w-0 flex-col overflow-hidden", view !== "split" && "flex-1")}
+                style={view === "split" ? { width: `${100 - splitPct}%` } : undefined}
+              >
                 <div className="flex items-center gap-2 border-b border-border px-3 py-1.5 text-[10px] text-fg-subtle">
                   <BookOpen size={11} /> Preview
                 </div>

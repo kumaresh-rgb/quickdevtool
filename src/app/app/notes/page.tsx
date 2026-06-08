@@ -46,6 +46,10 @@ export default function QuickNotesPage() {
   const [listOpen, setListOpen] = useState(true);
   const [mounted, setMounted]   = useState(false);
   const saveTimer               = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [listWidth, setListWidth] = useState(288);
+  const listWidthRef = useRef(288);
+  const resizeX0     = useRef(0);
+  const resizeW0     = useRef(0);
 
   /* Load from localStorage on mount */
   useEffect(() => {
@@ -53,6 +57,8 @@ export default function QuickNotesPage() {
     setNotes(stored);
     setActiveId(stored[0]?.id ?? null);
     setMounted(true);
+    const w = Number(localStorage.getItem("qdt-notes-list-w") || "0");
+    if (w >= 160) { setListWidth(w); listWidthRef.current = w; }
   }, []);
 
   const active = notes.find((n) => n.id === activeId) ?? null;
@@ -101,6 +107,27 @@ export default function QuickNotesPage() {
     saveTimer.current = setTimeout(() => persist(nextTitle, nextContent), 1000);
   }
 
+  function startResize(e: React.MouseEvent) {
+    resizeX0.current = e.clientX;
+    resizeW0.current = listWidthRef.current;
+    function move(ev: MouseEvent) {
+      const w = Math.max(160, Math.min(520, resizeW0.current + ev.clientX - resizeX0.current));
+      setListWidth(w);
+      listWidthRef.current = w;
+    }
+    function up() {
+      localStorage.setItem("qdt-notes-list-w", String(listWidthRef.current));
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+      document.removeEventListener("mousemove", move);
+      document.removeEventListener("mouseup", up);
+    }
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    document.addEventListener("mousemove", move);
+    document.addEventListener("mouseup", up);
+  }
+
   function createNote() {
     const note = mkNote();
     setNotes((prev) => {
@@ -137,7 +164,10 @@ export default function QuickNotesPage() {
 
       {/* ── Notes list ───────────────────────────────────── */}
       {listOpen && (
-        <div className="flex w-72 shrink-0 flex-col border-r border-border bg-bg-elevated">
+        <div
+          className="relative flex shrink-0 flex-col border-r border-border bg-bg-elevated"
+          style={{ width: listWidth }}
+        >
           <div className="flex items-center gap-2 border-b border-border p-3">
             <div className="relative flex-1">
               <Search size={14} className="absolute left-2.5 top-2.5 text-fg-subtle" />
@@ -190,6 +220,12 @@ export default function QuickNotesPage() {
               </div>
             ))}
           </div>
+
+          {/* drag-to-resize handle */}
+          <div
+            className="absolute right-0 top-0 z-10 h-full w-1 cursor-col-resize hover:bg-accent/50"
+            onMouseDown={startResize}
+          />
         </div>
       )}
 

@@ -5,6 +5,8 @@ import { Check, Copy, Download, Sparkles, AlertCircle, CheckCircle2 } from "luci
 import { PageHeader } from "@/components/ui/PageHeader";
 import { useCopy } from "@/lib/useCopy";
 import { formatDax, unescapeJsonDax } from "@/lib/dax-format";
+import { useSplitResize } from "@/lib/useSplitResize";
+import { SplitDivider } from "@/components/SplitDivider";
 
 type Mode = "text" | "tree";
 
@@ -65,6 +67,7 @@ export default function JsonToolkit() {
   const [output, setOutput] = useState("");
   const [mode, setMode] = useState<Mode>("text");
   const [copied, copy] = useCopy();
+  const split = useSplitResize("qdt-json-split");
 
   const validity = useMemo(() => {
     if (!input.trim()) return { valid: null as boolean | null, error: "" };
@@ -189,15 +192,17 @@ export default function JsonToolkit() {
         </div>
       </div>
 
-      <div className="grid flex-1 grid-cols-1 divide-y divide-border overflow-hidden md:grid-cols-2 md:divide-x md:divide-y-0">
+      <div ref={split.containerRef} className="flex flex-1 flex-col divide-y divide-border overflow-hidden md:flex-row md:divide-x md:divide-y-0">
         <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
           spellCheck={false}
           placeholder="Paste JSON or an escaped DAX payload…"
-          className="h-full resize-none bg-bg p-4 font-mono text-xs leading-6 text-fg outline-none"
+          className="flex-1 resize-none bg-bg p-4 font-mono text-xs leading-6 text-fg outline-none"
+          style={split.leftStyle}
         />
-        <div className="h-full overflow-auto bg-bg-elevated p-4">
+        <SplitDivider onMouseDown={split.onDragStart} />
+        <div className="flex-1 overflow-auto bg-bg-elevated p-4" style={split.rightStyle}>
           {mode === "tree" ? (
             parsed !== null ? (
               <JsonNode value={parsed} depth={0} />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Brain, Workflow, BookOpen, Gauge, AlertTriangle, ExternalLink, Sparkles, Code2,
 } from "lucide-react";
@@ -10,6 +10,7 @@ import { analyzeDax } from "@/lib/dax-analyze";
 import { TRUSTED_SOURCES, type DaxKeyword } from "@/lib/dax-knowledge";
 import { log } from "@/lib/logger";
 import { cn } from "@/lib/cn";
+import { SplitDivider } from "@/components/SplitDivider";
 
 const SAMPLE = `EVALUATE
 CALCULATETABLE(
@@ -78,6 +79,71 @@ export default function DaxInsightPage() {
   const [dax, setDax] = useState(SAMPLE);
   const [tab, setTab] = useState<MobileTab>("editor");
   const analysis = useMemo(() => analyzeDax(dax), [dax]);
+
+  /* ── 3-panel resize ──────────────────────────────────────── */
+  const [s1, setS1] = useState(33);
+  const [s2, setS2] = useState(67);
+  const s1Ref      = useRef(33);
+  const s2Ref      = useRef(67);
+  const panelsRef  = useRef<HTMLDivElement>(null);
+  const [lgDesktop, setLgDesktop] = useState(false);
+
+  useEffect(() => {
+    const v1 = Number(localStorage.getItem("qdt-insight-s1") || "0");
+    const v2 = Number(localStorage.getItem("qdt-insight-s2") || "0");
+    if (v1 >= 10 && v1 <= 80) { setS1(v1); s1Ref.current = v1; }
+    if (v2 >= 20 && v2 <= 90) { setS2(v2); s2Ref.current = v2; }
+    const check = () => setLgDesktop(window.innerWidth >= 1024);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  function onDrag1(e: React.MouseEvent) {
+    e.preventDefault();
+    function move(ev: MouseEvent) {
+      if (!panelsRef.current) return;
+      const { left, width } = panelsRef.current.getBoundingClientRect();
+      const next = Math.max(10, Math.min(s2Ref.current - 10, ((ev.clientX - left) / width) * 100));
+      setS1(next); s1Ref.current = next;
+    }
+    function up() {
+      localStorage.setItem("qdt-insight-s1", String(Math.round(s1Ref.current)));
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+      document.removeEventListener("mousemove", move);
+      document.removeEventListener("mouseup", up);
+    }
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    document.addEventListener("mousemove", move);
+    document.addEventListener("mouseup", up);
+  }
+
+  function onDrag2(e: React.MouseEvent) {
+    e.preventDefault();
+    function move(ev: MouseEvent) {
+      if (!panelsRef.current) return;
+      const { left, width } = panelsRef.current.getBoundingClientRect();
+      const next = Math.max(s1Ref.current + 10, Math.min(90, ((ev.clientX - left) / width) * 100));
+      setS2(next); s2Ref.current = next;
+    }
+    function up() {
+      localStorage.setItem("qdt-insight-s2", String(Math.round(s2Ref.current)));
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+      document.removeEventListener("mousemove", move);
+      document.removeEventListener("mouseup", up);
+    }
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    document.addEventListener("mousemove", move);
+    document.addEventListener("mouseup", up);
+  }
+
+  const p1Style = lgDesktop ? { width: `${s1}%`, flex: "none" as const } : {};
+  const p2Style = lgDesktop ? { width: `${s2 - s1}%`, flex: "none" as const } : {};
+  const p3Style = lgDesktop ? { width: `${100 - s2}%`, flex: "none" as const } : {};
 
   function explain() {
     log.action("DaxInsight", "analyze", { keywords: analysis.detected.length });
@@ -183,11 +249,13 @@ export default function DaxInsightPage() {
         ))}
       </div>
 
-      {/* Desktop: 3-panel; mobile: active tab only */}
-      <div className="hidden min-h-0 flex-1 overflow-hidden lg:grid lg:grid-cols-[1fr_1fr_360px] lg:divide-x lg:divide-border">
-        {Editor}
-        {Flow}
-        {Insights}
+      {/* Desktop: 3-panel resizable; mobile: active tab only */}
+      <div ref={panelsRef} className="hidden min-h-0 flex-1 overflow-hidden lg:flex">
+        <div className="flex-1 overflow-hidden" style={p1Style}>{Editor}</div>
+        <SplitDivider onMouseDown={onDrag1} className="hidden lg:flex" />
+        <div className="flex-1 overflow-hidden" style={p2Style}>{Flow}</div>
+        <SplitDivider onMouseDown={onDrag2} className="hidden lg:flex" />
+        <div className="flex-1 overflow-hidden" style={p3Style}>{Insights}</div>
       </div>
       <div className="min-h-0 flex-1 overflow-hidden lg:hidden">
         {tab === "editor" ? Editor : tab === "flow" ? Flow : Insights}

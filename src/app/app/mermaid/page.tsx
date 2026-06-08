@@ -4,6 +4,8 @@ import { useRef, useState } from "react";
 import { Workflow, FileImage, FileCode2, Columns2, Eye } from "lucide-react";
 import { MermaidView } from "@/components/MermaidView";
 import { log } from "@/lib/logger";
+import { useSplitResize } from "@/lib/useSplitResize";
+import { SplitDivider } from "@/components/SplitDivider";
 
 const SAMPLE = `flowchart TD
     A[User pastes DAX] --> B{Detect keywords}
@@ -21,6 +23,7 @@ export default function MermaidStudioPage() {
   const [theme, setTheme] = useState<Theme>("auto");
   const [view, setView] = useState<"split" | "preview">("split");
   const svgRef = useRef<string>("");
+  const split = useSplitResize("qdt-mermaid-split");
 
   function downloadSvg() {
     if (!svgRef.current) return;
@@ -103,9 +106,10 @@ export default function MermaidStudioPage() {
       </div>
 
       {view === "split" ? (
-        <div className="grid min-h-0 flex-1 grid-rows-2 divide-y divide-border md:grid-cols-2 md:grid-rows-1 md:divide-x md:divide-y-0">
-          {editor}
-          {preview}
+        <div ref={split.containerRef} className="flex min-h-0 flex-1 flex-col divide-y divide-border md:flex-row md:divide-x md:divide-y-0">
+          <div className="flex-1 overflow-hidden" style={split.leftStyle}>{editor}</div>
+          <SplitDivider onMouseDown={split.onDragStart} />
+          <div className="flex-1 overflow-hidden" style={split.rightStyle}>{preview}</div>
         </div>
       ) : (
         <div className="min-h-0 flex-1">{preview}</div>
