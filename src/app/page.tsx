@@ -64,18 +64,18 @@ const TOOLS = [
     label: "Quick Notes",
     color: "#818cf8",
     href: "/app/notes",
-    tagline: "Rich-text editor that thinks like a developer",
+    tagline: "Rich-text notes with smart code detection",
     bullets: [
-      "Slash commands: /code, /dax, /json, /table, /todo",
+      "TipTap editor — headings, lists, tables, code blocks",
       "Smart Paste — auto-detects JSON, DAX, SQL, Mermaid",
-      "2-second autosave with per-note history",
-      "Collapsible sidebar, search, pin & archive",
+      "1-second autosave to browser storage",
+      "Collapsible sidebar, search & pin",
     ],
-    preview: `// Paste any code → Smart Paste detects language
+    preview: `// Smart Paste — detects language, wraps in code block
 const result = await fetch('/api/notes');
 const notes  = await result.json();
 
-// Slash-command inline: type /dax →
+// Also detects DAX, SQL, Mermaid, JSON, XML
 CALCULATE(SUM(Sales[Amount]),
   FILTER(ALL(Calendar), ...))`,
   },
@@ -226,21 +226,21 @@ CALCULATE(SUM(Sales[Amount]),
     label: "Quick Board",
     color: "#e879f9",
     href: "/app/whiteboard",
-    tagline: "AI-powered infinite canvas for visual thinking",
+    tagline: "Coming soon — AI-powered infinite canvas",
     bullets: [
-      "Infinite canvas — shapes, connectors, sticky notes",
+      "Infinite canvas with shapes, connectors & sticky notes",
       "AI Copilot: generate system designs from a prompt",
-      "Mermaid & flowchart rendering built-in",
+      "Real-time multiplayer editing with live cursors",
       "Export to PNG · SVG · PDF",
     ],
-    preview: `┌─ Canvas ────────────────────────────────┐
-│  [API Gateway] ──▶ [Auth Service]       │
-│       │                │                │
-│       ▼                ▼                │
-│  [User DB]      [Session Store]         │
-│                                         │
-│  ✨ AI: "Design Netflix architecture"   │
-└─────────────────────────────────────────┘`,
+    preview: `  ┌──────────────────────────────────────┐
+  │        🚧  Coming Soon               │
+  │                                      │
+  │  Quick Board is under active         │
+  │  development. Sign up to get         │
+  │  notified when it launches.          │
+  │                                      │
+  └──────────────────────────────────────┘`,
   },
 ];
 
@@ -286,9 +286,9 @@ const ROADMAP = [
     desc: "Monaco editor + live preview + Mermaid + localStorage",
   },
   {
-    status: "done",
+    status: "active",
     label: "Quick Board (AI infinite canvas)",
-    desc: "Visual thinking workspace — shapes, connectors, AI Copilot",
+    desc: "Infinite canvas with shapes, connectors, sticky notes and AI Copilot — in progress",
   },
   {
     status: "active",
@@ -481,7 +481,7 @@ export default function Landing() {
             </h1>
 
             <p className="mx-auto mt-5 max-w-lg text-balance text-base text-fg-muted sm:text-lg">
-              Notes · DAX Insight · DAX Studio · Mermaid · JSON · Diff · Kanban
+              Notes · MD Studio · DAX Insight · Mermaid · JSON · Diff · Kanban
               — all local-first, all free, all in one tab.
             </p>
 
@@ -501,9 +501,9 @@ export default function Landing() {
           {/* Stats strip */}
           <div className="relative z-10 mx-auto mt-14 grid max-w-xl grid-cols-2 gap-3 sm:max-w-2xl sm:grid-cols-4">
             {[
-              { icon: Zap, value: "7", label: "Built-in tools" },
+              { icon: Zap, value: "8", label: "Built-in tools" },
               { icon: Lock, value: "0", label: "Paid services" },
-              { icon: Wifi, value: "100%", label: "Works offline" },
+              { icon: Wifi, value: "100%", label: "Local-first" },
               { icon: GitFork, value: "MIT", label: "Open source" },
             ].map((m, i) => (
               <motion.div
@@ -550,7 +550,7 @@ export default function Landing() {
                 icon: Lock,
                 title: "Privacy First",
                 color: "#10b981",
-                body: "Notes, queries and diagrams stay in a local SQLite file. Nothing is uploaded anywhere, ever.",
+                body: "Notes and diagrams stay in your browser's local storage. Nothing is uploaded anywhere, ever.",
               },
               {
                 icon: Server,
@@ -560,15 +560,15 @@ export default function Landing() {
               },
               {
                 icon: Wifi,
-                title: "Works Offline",
+                title: "Local-First",
                 color: "#8b5cf6",
-                body: "All 7 tools work without internet. No API calls to external services. No spinners.",
+                body: "All data lives in your browser — no server, no sync, no account. Tools keep working after the page loads.",
               },
               {
                 icon: Zap,
                 title: "Genuinely Fast",
                 color: "#ef4444",
-                body: "Local SQLite means sub-millisecond queries. No CDN round-trips. No spinners on every click.",
+                body: "Browser storage means instant reads. No CDN round-trips, no network latency, no spinners on every click.",
               },
               {
                 icon: Users,
@@ -752,14 +752,14 @@ export default function Landing() {
               },
               {
                 step: "02",
-                title: "Start both servers",
-                code: "npm install && npm run dev\n# .NET backend auto-starts",
-                note: "Single command launch",
+                title: "Install & start",
+                code: "npm install\nnpm run dev",
+                note: "Single command, no backend needed",
               },
               {
                 step: "03",
                 title: "Open localhost:3000",
-                code: "# All 7 tools ready\n# SQLite DB auto-created\n# Sample data pre-loaded",
+                code: "# All tools open instantly\n# Saves to browser storage\n# Zero configuration",
                 note: "Zero configuration",
               },
             ].map((s, i) => (
@@ -805,12 +805,12 @@ export default function Landing() {
                   {
                     icon: Lock,
                     title: "Zero cloud",
-                    body: "SQLite on your machine. Notes, queries and diagrams never leave your computer.",
+                    body: "Browser storage on your machine. Everything saves locally — nothing ever leaves your device.",
                   },
                   {
                     icon: Zap,
                     title: "Instant response",
-                    body: "No API round-trips. Every tool responds in milliseconds — even search across thousands of notes.",
+                    body: "No API round-trips. Every tool responds in milliseconds — reads straight from browser storage.",
                   },
                   {
                     icon: Shield,
